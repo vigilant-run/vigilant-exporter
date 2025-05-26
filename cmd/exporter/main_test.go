@@ -4,11 +4,11 @@ import (
 	"os"
 	"testing"
 
-	"go.uber.org/zap"
+	"log/slog"
 )
 
 func TestRunWithNoArgs(t *testing.T) {
-	logger := zap.NewNop()
+	logger := newTestLogger(t)
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
 
@@ -22,7 +22,7 @@ func TestRunWithNoArgs(t *testing.T) {
 }
 
 func TestRunWithArgs(t *testing.T) {
-	logger := zap.NewNop()
+	logger := newTestLogger(t)
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
 
@@ -37,7 +37,7 @@ func TestRunWithArgs(t *testing.T) {
 }
 
 func TestRunWithMultipleArgs(t *testing.T) {
-	logger := zap.NewNop()
+	logger := newTestLogger(t)
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
 
@@ -49,4 +49,15 @@ func TestRunWithMultipleArgs(t *testing.T) {
 	if exitCode != 1 {
 		t.Errorf("Expected exit code 1, got %d", exitCode)
 	}
+}
+
+func newTestLogger(t *testing.T) *slog.Logger {
+	t.Helper()
+
+	handler := slog.NewJSONHandler(os.Stdout, nil)
+	handler.WithAttrs([]slog.Attr{
+		slog.String("test", t.Name()),
+	})
+
+	return slog.New(handler)
 }

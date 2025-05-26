@@ -1,44 +1,34 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"os"
 	"strings"
-
-	"go.uber.org/zap"
 )
 
 type App struct {
-	logger *zap.Logger
+	logger *slog.Logger
 }
 
-func NewApp(logger *zap.Logger) *App {
+func NewApp(
+	logger *slog.Logger,
+) *App {
 	return &App{
 		logger: logger,
 	}
 }
 
 func (a *App) Run() int {
-	a.logger.Info("Starting Vigilant Exporter")
-
 	if len(os.Args) > 1 {
-		a.logger.Error("This tool takes no arguments", zap.String("args", strings.Join(os.Args, " ")))
+		a.logger.Error("This tool takes no arguments", slog.String("args", strings.Join(os.Args, " ")))
 		return 1
 	}
-
-	a.logger.Info("Running exporter...")
-	a.logger.Info("Exporter completed successfully")
 
 	return 0
 }
 
 func main() {
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatalf("Failed to initialize logger: %v\n", err)
-	}
-	defer logger.Sync()
-
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	app := NewApp(logger)
 	os.Exit(app.Run())
 }
