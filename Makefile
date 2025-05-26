@@ -27,10 +27,18 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@echo "Clean complete"
 
-test:
-	@echo "Running tests..."
-	$(GOTEST) -v ./...
+tidy:
+	@echo "Tidying dependencies..."
+	$(GOMOD) tidy
 
+test:
+	@if [ -n "$(filter-out test,$(MAKECMDGOALS))" ]; then \
+		echo "Running tests in $(filter-out test,$(MAKECMDGOALS))..."; \
+		$(GOTEST) -v ./$(filter-out test,$(MAKECMDGOALS))/...; \
+	else \
+		echo "Running tests..."; \
+		$(GOTEST) -v ./...; \
+	fi
 
 deps:
 	@echo "Downloading dependencies..."
@@ -66,4 +74,7 @@ help:
 	@echo "  install      - Install the application to GOPATH/bin"
 	@echo "  run          - Build and run the application"
 	@echo "  build-all    - Build for multiple platforms"
-	@echo "  help         - Show this help message" 
+	@echo "  help         - Show this help message"
+
+%:
+	@: 
