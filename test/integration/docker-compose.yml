@@ -23,7 +23,7 @@ services:
       server:
         condition: service_healthy
     volumes:
-      - ../../bin/vigilant-exporter:/app/vigilant-exporter:ro
+      - ../../build/vigilant-exporter:/app/vigilant-exporter
       - ./test/testdata:/testdata
       - /tmp/test-logs:/logs
     networks:

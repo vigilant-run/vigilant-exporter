@@ -117,7 +117,7 @@ func TestHTTPSender_SendBatch_Concurrent(t *testing.T) {
 
 	wg.Wait()
 	if client.CallCount != 10 {
-		t.Errorf("Expected 1 call to client, got %d", client.CallCount)
+		t.Errorf("expected 1 call to client, got %d", client.CallCount)
 	}
 }
 
@@ -133,11 +133,11 @@ func TestHTTPSender_SendBatch_Unavailable(t *testing.T) {
 	batch := data.NewMessageBatch("test-token", []*data.Log{})
 	err := sender.SendBatch(context.Background(), batch)
 	if err != ErrSendFailed {
-		t.Errorf("Expected ErrExportFailed, got %v", err)
+		t.Errorf("expected ErrExportFailed, got %v", err)
 	}
 
 	if client.CallCount != 1 {
-		t.Errorf("Expected 1 call to client, got %d", client.CallCount)
+		t.Errorf("expected 1 call to client, got %d", client.CallCount)
 	}
 }
 
@@ -145,22 +145,22 @@ func createValidMockClient(t *testing.T) *MockHTTPClient {
 	return &MockHTTPClient{
 		DoFunc: func(req *http.Request) (*http.Response, error) {
 			if req.Method != http.MethodPost {
-				t.Errorf("Expected POST method, got %s", req.Method)
+				t.Errorf("expected POST method, got %s", req.Method)
 			}
 
 			contentType := req.Header.Get("Content-Type")
 			if contentType != "application/json" {
-				t.Errorf("Expected Content-Type application/json, got %s", contentType)
+				t.Errorf("expected Content-Type application/json, got %s", contentType)
 			}
 
 			body, err := io.ReadAll(req.Body)
 			if err != nil {
-				t.Errorf("Failed to read request body: %v", err)
+				t.Errorf("failed to read request body: %v", err)
 			}
 
 			var batch data.MessageBatch
 			if err := json.Unmarshal(body, &batch); err != nil {
-				t.Errorf("Request body is not valid JSON: %v", err)
+				t.Errorf("request body is not valid JSON: %v", err)
 			}
 
 			return createSuccessResponse(), nil

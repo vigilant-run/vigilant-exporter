@@ -13,6 +13,8 @@ import (
 )
 
 const (
+	EXECUTABLE_PATH = "/app/vigilant-exporter"
+
 	ENDPOINT_HEALTH  = "http://server:8000/api/health"
 	ENDPOINT_LOGS    = "http://server:8000/api/logs"
 	ENDPOINT_MESSAGE = "http://server:8000/api/message"
@@ -104,14 +106,15 @@ func writeLogsToFile(file *os.File, logs []string) error {
 }
 
 func runCli(t *testing.T, logFile string) *exec.Cmd {
-	cmd := exec.Command("/app/vigilant-exporter",
+	cmd := exec.Command(EXECUTABLE_PATH,
 		"--file", logFile,
-		"--token", "integration_token",
-		"--endpoint", "http://server:8000/api/message",
-		"--insecure")
+		"--token", TOKEN,
+		"--endpoint", ENDPOINT_MESSAGE,
+		"--insecure",
+	)
 
 	if err := cmd.Start(); err != nil {
-		t.Fatalf("failed to start CLI: %v", err)
+		t.Fatalf("failed to start cli: %v", err)
 	}
 
 	return cmd
@@ -154,7 +157,7 @@ func checkLogsReceived(t *testing.T, expectedLogs []string) error {
 }
 
 func getLogsFromServer(t *testing.T) (*LogResponse, error) {
-	resp, err := http.Get("http://server:8000/api/logs")
+	resp, err := http.Get(ENDPOINT_LOGS)
 	if err != nil {
 		t.Fatalf("failed to get logs from server: %v", err)
 	}
@@ -178,7 +181,7 @@ func getLogsFromServer(t *testing.T) (*LogResponse, error) {
 }
 
 func getHealthFromServer(t *testing.T) error {
-	resp, err := http.Get("http://server:8000/api/health")
+	resp, err := http.Get(ENDPOINT_HEALTH)
 	if err != nil {
 		t.Fatalf("failed to get health from server: %v", err)
 	}

@@ -7,6 +7,7 @@ mkdir -p "${PROJECT_ROOT}/build"
 
 cd "${PROJECT_ROOT}"
 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o "${PROJECT_ROOT}/build/vigilant-exporter" ./cmd/exporter
+chmod +x "${PROJECT_ROOT}/build/vigilant-exporter"
 
 cd "${PROJECT_ROOT}/test/integration"
 docker compose down -v --remove-orphans

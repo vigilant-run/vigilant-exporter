@@ -19,7 +19,7 @@ func TestNewTail_ExistingFileFromStart(t *testing.T) {
 	content := "line 1\nline 2\nline 3\n"
 	err := os.WriteFile(testFile, []byte(content), FILE_PERMISSIONS)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf("failed to create test file: %v", err)
 	}
 
 	config := TailConfig{
@@ -50,7 +50,7 @@ func TestNewTail_ExistingFileWithOffset(t *testing.T) {
 	content := "line 1\nline 2\nline 3\n"
 	err := os.WriteFile(testFile, []byte(content), FILE_PERMISSIONS)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf("failed to create test file: %v", err)
 	}
 
 	config := TailConfig{
@@ -98,7 +98,7 @@ func TestNewTail_EmptyFile(t *testing.T) {
 	testFile := filepath.Join(tmpDir, "empty.log")
 	err := os.WriteFile(testFile, []byte(""), FILE_PERMISSIONS)
 	if err != nil {
-		t.Fatalf("Failed to create empty test file: %v", err)
+		t.Fatalf("failed to create empty test file: %v", err)
 	}
 
 	config := TailConfig{
@@ -126,7 +126,7 @@ func TestNewTail_InvalidPermission(t *testing.T) {
 	testFile := filepath.Join(tmpDir, "invalid_permission.log")
 	err := os.WriteFile(testFile, []byte(""), 0000)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf("failed to create test file: %v", err)
 	}
 
 	config := TailConfig{
@@ -151,7 +151,7 @@ func TestNewTail_RealTimeUpdates_AppendSingleLine(t *testing.T) {
 	testFile := filepath.Join(tmpDir, "real_time_updates.log")
 	err := os.WriteFile(testFile, []byte(""), FILE_PERMISSIONS)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf("failed to create test file: %v", err)
 	}
 
 	tail, err := NewTail(TailConfig{
@@ -159,7 +159,7 @@ func TestNewTail_RealTimeUpdates_AppendSingleLine(t *testing.T) {
 		StartOffset: 0,
 	})
 	if err != nil {
-		t.Fatalf("Failed to create tail: %v", err)
+		t.Fatalf("failed to create tail: %v", err)
 	}
 	defer tail.Stop()
 
@@ -167,7 +167,7 @@ func TestNewTail_RealTimeUpdates_AppendSingleLine(t *testing.T) {
 
 	err = os.WriteFile(testFile, []byte("line 1\n"), FILE_PERMISSIONS)
 	if err != nil {
-		t.Fatalf("Failed to append line to test file: %v", err)
+		t.Fatalf("failed to append line to test file: %v", err)
 	}
 
 	select {
@@ -185,7 +185,7 @@ func TestNewTail_RealTimeUpdates_AppendMultipleLines(t *testing.T) {
 	testFile := filepath.Join(tmpDir, "real_time_updates.log")
 	err := os.WriteFile(testFile, []byte(""), FILE_PERMISSIONS)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf("failed to create test file: %v", err)
 	}
 
 	tail, err := NewTail(TailConfig{
@@ -193,7 +193,7 @@ func TestNewTail_RealTimeUpdates_AppendMultipleLines(t *testing.T) {
 		StartOffset: 0,
 	})
 	if err != nil {
-		t.Fatalf("Failed to create tail: %v", err)
+		t.Fatalf("failed to create tail: %v", err)
 	}
 	defer tail.Stop()
 
@@ -201,7 +201,7 @@ func TestNewTail_RealTimeUpdates_AppendMultipleLines(t *testing.T) {
 
 	err = os.WriteFile(testFile, []byte("line 1\nline 2\nline 3\n"), FILE_PERMISSIONS)
 	if err != nil {
-		t.Fatalf("Failed to append lines to test file: %v", err)
+		t.Fatalf("failed to append lines to test file: %v", err)
 	}
 
 	for _, line := range []string{"line 1", "line 2", "line 3"} {

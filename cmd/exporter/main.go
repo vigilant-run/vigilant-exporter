@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 	"vigilant-exporter/internal/app"
 	"vigilant-exporter/internal/config"
 
@@ -10,13 +13,16 @@ import (
 )
 
 func main() {
-	rootCmd := newRootCmd()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	rootCmd := newRootCmd(ctx)
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
-func newRootCmd() *cobra.Command {
+func newRootCmd(ctx context.Context) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "vigilant-exporter",
 		Short: "A log file exporter for Vigilant",
@@ -28,7 +34,7 @@ func newRootCmd() *cobra.Command {
 			}
 
 			app := app.NewApp(config)
-			return app.Run()
+			return app.Run(ctx)
 		},
 	}
 

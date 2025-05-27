@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"vigilant-exporter/internal/config"
+	"vigilant-exporter/internal/data"
 	"vigilant-exporter/internal/sender"
 	"vigilant-exporter/internal/tailer"
 
@@ -34,7 +35,7 @@ func NewApp(
 
 	fileTailer, err := tailer.NewTail(tailConfig)
 	if err != nil {
-		log.Fatalf("Failed to start tailer: %v", err)
+		log.Fatalf("failed to start tailer: %v", err)
 	}
 
 	return &App{
@@ -44,15 +45,16 @@ func NewApp(
 	}
 }
 
-func (a *App) Run() error {
-	ctx, cancel := context.WithCancel(context.Background())
+func (a *App) Run(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	go func() {
 		for {
 			select {
 			case line := <-a.tailer.Lines:
-				log.Println(line.Text)
+				batch := a.createBatch(line)
+				a.sender.SendBatch(ctx, batch)
 			case <-a.tailer.Dying():
 				log.Println("File tailer died")
 				return
@@ -69,4 +71,20 @@ func (a *App) Run() error {
 			return nil
 		}
 	}
+}
+
+func (a *App) createBatch(line *tail.Line) *data.MessageBatch {
+	batch := data.NewMessageBatch(
+		a.exporterConfig.Token,
+		[]*data.Log{
+			data.NewLog(
+				line.Time,
+				"INFO",
+				line.Text,
+				map[string]string{},
+			),
+		},
+	)
+
+	return batch
 }
