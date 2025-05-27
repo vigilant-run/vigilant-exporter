@@ -1,34 +1,38 @@
 package main
 
 import (
-	"log/slog"
+	"fmt"
 	"os"
-	"strings"
+	"vigilant-exporter/internal/app"
+	"vigilant-exporter/internal/config"
+
+	"github.com/spf13/cobra"
 )
 
-type App struct {
-	logger *slog.Logger
-}
-
-func NewApp(
-	logger *slog.Logger,
-) *App {
-	return &App{
-		logger: logger,
-	}
-}
-
-func (a *App) Run() int {
-	if len(os.Args) > 1 {
-		a.logger.Error("This tool takes no arguments", slog.String("args", strings.Join(os.Args, " ")))
-		return 1
-	}
-
-	return 0
-}
-
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	app := NewApp(logger)
-	os.Exit(app.Run())
+	rootCmd := newRootCmd()
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
+}
+
+func newRootCmd() *cobra.Command {
+	rootCmd := &cobra.Command{
+		Use:   "vigilant-exporter",
+		Short: "A log file exporter for Vigilant",
+		Long:  "Monitors log files and exports them to a Vigilant endpoint",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			config, err := config.InitConfig(cmd)
+			if err != nil {
+				return fmt.Errorf("configuration error: %w", err)
+			}
+
+			app := app.NewApp(config)
+			return app.Run()
+		},
+	}
+
+	config.AddFlags(rootCmd)
+
+	return rootCmd
 }

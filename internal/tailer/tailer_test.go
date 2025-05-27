@@ -1,4 +1,4 @@
-package tail
+package tailer
 
 import (
 	"errors"

@@ -1,4 +1,4 @@
-package export
+package sender
 
 import (
 	"bytes"
@@ -11,18 +11,18 @@ import (
 )
 
 var (
-	ErrExportInvalidRequest = errors.New("invalid request")
-	ErrExportFailed         = errors.New("failed to export batch")
-	ErrExportTimeout        = errors.New("export timeout")
-	ErrExportCanceled       = errors.New("export canceled")
+	ErrSendInvalidRequest = errors.New("invalid request")
+	ErrSendFailed         = errors.New("failed to send batch")
+	ErrSendTimeout        = errors.New("send timeout")
+	ErrSendCanceled       = errors.New("send canceled")
 )
 
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// HTTPExporter is an exporter that sends logs to a HTTP endpoint.
-type HTTPExporter struct {
+// HTTPSender is a sender that sends logs to a HTTP endpoint.
+type HTTPSender struct {
 	httpClient HTTPClient
 
 	endpoint string
@@ -31,13 +31,13 @@ type HTTPExporter struct {
 	mux sync.Mutex
 }
 
-// NewHTTPExporter creates a new HTTPExporter.
-func NewHTTPExporter(
+// NewHTTPSender creates a new HTTPSender.
+func NewHTTPSender(
 	httpClient HTTPClient,
 	endpoint string,
 	token string,
-) *HTTPExporter {
-	return &HTTPExporter{
+) *HTTPSender {
+	return &HTTPSender{
 		httpClient: httpClient,
 		endpoint:   endpoint,
 		token:      token,
@@ -45,8 +45,8 @@ func NewHTTPExporter(
 	}
 }
 
-// ExportBatch synchronously exports a batch of logs to the HTTP endpoint.
-func (e *HTTPExporter) ExportBatch(
+// SendBatch synchronously sends a batch of logs to the HTTP endpoint.
+func (e *HTTPSender) SendBatch(
 	ctx context.Context,
 	batch *data.MessageBatch,
 ) error {
@@ -55,7 +55,7 @@ func (e *HTTPExporter) ExportBatch(
 
 	json, err := json.Marshal(batch)
 	if err != nil {
-		return ErrExportInvalidRequest
+		return ErrSendInvalidRequest
 	}
 
 	req, err := http.NewRequestWithContext(
@@ -65,19 +65,19 @@ func (e *HTTPExporter) ExportBatch(
 		bytes.NewBuffer(json),
 	)
 	if err != nil {
-		return ErrExportInvalidRequest
+		return ErrSendInvalidRequest
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := e.httpClient.Do(req)
 	if err != nil {
-		return ErrExportFailed
+		return ErrSendFailed
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return ErrExportFailed
+		return ErrSendFailed
 	}
 
 	return nil
