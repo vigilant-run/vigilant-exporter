@@ -5,3 +5,5 @@ COPY runner/integration_test.go .
 
 RUN go mod init tests && \
     go mod tidy
+
+CMD ["go", "test", "-v", "."]

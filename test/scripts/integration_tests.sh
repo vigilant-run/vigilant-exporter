@@ -2,30 +2,27 @@
 
 set -e
 
-echo "Starting integration tests..."
+PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+mkdir -p "${PROJECT_ROOT}/build"
 
-cd "$(dirname "$0")/../integration"
+cd "${PROJECT_ROOT}"
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o "${PROJECT_ROOT}/build/vigilant-exporter" ./cmd/exporter
 
-echo "Stopping and removing existing containers..."
+cd "${PROJECT_ROOT}/test/integration"
 docker compose down -v --remove-orphans
-
-echo "Starting services..."
 docker compose up --build -d server
 
-echo "Waiting for health check..."
-timeout 30 bash -c 'until curl -f http://localhost:8000/api/health >/dev/null 2>&1; do sleep 2; done'
+timeout 30 bash -c 'until curl -sf http://localhost:8000/api/health >/dev/null 2>&1; do echo "Waiting for server..." && sleep 2; done'
 
-echo "Running integration tests..."
-docker compose up runner
+docker compose up --build runner
+exit_code=$(docker compose ps -aq runner | xargs docker inspect -f '{{.State.ExitCode}}')
 
-if [ $? -eq 0 ]; then
-    echo "Integration tests passed!"
+docker compose down -v --remove-orphans
+
+if [ "$exit_code" -eq 0 ]; then
+    echo "Integration tests passed"
+    exit 0
 else
-    echo "Integration tests failed!"
+    echo "Integration tests failed"
     exit 1
 fi
-
-echo "Cleaning up..."
-docker compose down -v
-
-echo "Integration tests completed!"
