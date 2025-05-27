@@ -6,9 +6,8 @@ RUN go mod init server && \
     go mod tidy && \
     go build -o server .
 
-FROM golang:1.24-alpine
+FROM alpine:latest
 RUN apk --no-cache add ca-certificates curl
-WORKDIR /app
 COPY --from=builder /app/server .
 EXPOSE 8000
 CMD ["./server"]

@@ -29,3 +29,23 @@ The Vigilant Exporter can be configured with the following flags:
 - `--endpoint`: The endpoint URL for log ingestion.
 - `--insecure`: Send logs over HTTP instead of HTTPS.
 - `--help`: Show help for any command.
+
+## Development
+
+### Building
+
+```bash
+make build
+```
+
+### Running tests
+
+```bash
+make test
+```
+
+### Running integration tests (requires Docker)
+
+```bash
+make test-integration
+```
