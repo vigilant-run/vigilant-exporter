@@ -37,8 +37,12 @@ test:
 		$(GOTEST) -v ./$(filter-out test,$(MAKECMDGOALS))/...; \
 	else \
 		echo "Running tests..."; \
-		$(GOTEST) -v ./...; \
+		$(GOTEST) -v ./internal/...; \
 	fi
+
+test-integration:
+	@echo "Running integration tests..."
+	./test/scripts/integration_tests.sh
 
 deps:
 	@echo "Downloading dependencies..."

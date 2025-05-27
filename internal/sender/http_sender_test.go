@@ -1,4 +1,4 @@
-package export
+package sender
 
 import (
 	"context"
@@ -22,34 +22,33 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return m.DoFunc(req)
 }
 
-func TestNewHTTPExporter(t *testing.T) {
+func TestNewHTTPSender(t *testing.T) {
 	client := &http.Client{}
 	endpoint := "https://api.example.com/logs"
 	token := "test-token"
 
-	exporter := NewHTTPExporter(client, endpoint, token)
-
-	if exporter == nil {
-		t.Fatal("Expected exporter to be non-nil")
+	sender := NewHTTPSender(client, endpoint, token)
+	if sender == nil {
+		t.Fatal("Expected sender to be non-nil")
 	}
 
-	if exporter.httpClient != client {
+	if sender.httpClient != client {
 		t.Error("Expected httpClient to be set correctly")
 	}
 
-	if exporter.endpoint != endpoint {
-		t.Errorf("Expected endpoint to be %s, got %s", endpoint, exporter.endpoint)
+	if sender.endpoint != endpoint {
+		t.Errorf("Expected endpoint to be %s, got %s", endpoint, sender.endpoint)
 	}
 
-	if exporter.token != token {
-		t.Errorf("Expected token to be %s, got %s", token, exporter.token)
+	if sender.token != token {
+		t.Errorf("Expected token to be %s, got %s", token, sender.token)
 	}
 }
 
-func TestHTTPExporter_ExportBatch_Success(t *testing.T) {
+func TestHTTPSender_SendBatch_Success(t *testing.T) {
 	client := createValidMockClient(t)
 
-	exporter := NewHTTPExporter(
+	sender := NewHTTPSender(
 		client,
 		"https://api.example.com/logs",
 		"test-token",
@@ -67,7 +66,7 @@ func TestHTTPExporter_ExportBatch_Success(t *testing.T) {
 		},
 	)
 
-	err := exporter.ExportBatch(context.Background(), batch)
+	err := sender.SendBatch(context.Background(), batch)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -77,17 +76,17 @@ func TestHTTPExporter_ExportBatch_Success(t *testing.T) {
 	}
 }
 
-func TestHTTPExporter_ExportBatch_Empty(t *testing.T) {
+func TestHTTPSender_SendBatch_Empty(t *testing.T) {
 	client := createValidMockClient(t)
 
-	exporter := NewHTTPExporter(
+	sender := NewHTTPSender(
 		client,
 		"https://api.example.com/logs",
 		"test-token",
 	)
 
 	batch := data.NewMessageBatch("test-token", []*data.Log{})
-	err := exporter.ExportBatch(context.Background(), batch)
+	err := sender.SendBatch(context.Background(), batch)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -97,10 +96,10 @@ func TestHTTPExporter_ExportBatch_Empty(t *testing.T) {
 	}
 }
 
-func TestHTTPExporter_ExportBatch_Concurrent(t *testing.T) {
+func TestHTTPSender_SendBatch_Concurrent(t *testing.T) {
 	client := createValidMockClient(t)
 
-	exporter := NewHTTPExporter(
+	sender := NewHTTPSender(
 		client,
 		"https://api.example.com/logs",
 		"test-token",
@@ -111,34 +110,34 @@ func TestHTTPExporter_ExportBatch_Concurrent(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			batch := data.NewMessageBatch("test-token", []*data.Log{})
-			exporter.ExportBatch(context.Background(), batch)
+			sender.SendBatch(context.Background(), batch)
 			wg.Done()
 		}()
 	}
 
 	wg.Wait()
 	if client.CallCount != 10 {
-		t.Errorf("Expected 1 call to client, got %d", client.CallCount)
+		t.Errorf("expected 1 call to client, got %d", client.CallCount)
 	}
 }
 
-func TestHTTPExporter_ExportBatch_Unavailable(t *testing.T) {
+func TestHTTPSender_SendBatch_Unavailable(t *testing.T) {
 	client := createUnavailableMockClient(t)
 
-	exporter := NewHTTPExporter(
+	sender := NewHTTPSender(
 		client,
 		"https://api.example.com/logs",
 		"test-token",
 	)
 
 	batch := data.NewMessageBatch("test-token", []*data.Log{})
-	err := exporter.ExportBatch(context.Background(), batch)
-	if err != ErrExportFailed {
-		t.Errorf("Expected ErrExportFailed, got %v", err)
+	err := sender.SendBatch(context.Background(), batch)
+	if err != ErrSendFailed {
+		t.Errorf("expected ErrExportFailed, got %v", err)
 	}
 
 	if client.CallCount != 1 {
-		t.Errorf("Expected 1 call to client, got %d", client.CallCount)
+		t.Errorf("expected 1 call to client, got %d", client.CallCount)
 	}
 }
 
@@ -146,22 +145,22 @@ func createValidMockClient(t *testing.T) *MockHTTPClient {
 	return &MockHTTPClient{
 		DoFunc: func(req *http.Request) (*http.Response, error) {
 			if req.Method != http.MethodPost {
-				t.Errorf("Expected POST method, got %s", req.Method)
+				t.Errorf("expected POST method, got %s", req.Method)
 			}
 
 			contentType := req.Header.Get("Content-Type")
 			if contentType != "application/json" {
-				t.Errorf("Expected Content-Type application/json, got %s", contentType)
+				t.Errorf("expected Content-Type application/json, got %s", contentType)
 			}
 
 			body, err := io.ReadAll(req.Body)
 			if err != nil {
-				t.Errorf("Failed to read request body: %v", err)
+				t.Errorf("failed to read request body: %v", err)
 			}
 
 			var batch data.MessageBatch
 			if err := json.Unmarshal(body, &batch); err != nil {
-				t.Errorf("Request body is not valid JSON: %v", err)
+				t.Errorf("request body is not valid JSON: %v", err)
 			}
 
 			return createSuccessResponse(), nil

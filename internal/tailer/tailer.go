@@ -1,4 +1,4 @@
-package tail
+package tailer
 
 import (
 	"fmt"
@@ -12,22 +12,24 @@ type TailConfig struct {
 	StartOffset int64
 }
 
-func NewTail(cfg TailConfig) (*tail.Tail, error) {
-	if _, err := os.Stat(cfg.Path); err != nil {
+func NewTail(
+	config TailConfig,
+) (*tail.Tail, error) {
+	if _, err := os.Stat(config.Path); err != nil {
 		if os.IsNotExist(err) {
-			return nil, TailFileDoesNotExistError{path: cfg.Path}
+			return nil, TailFileDoesNotExistError{path: config.Path}
 		} else if os.IsPermission(err) {
-			return nil, TailFileInvalidPermissionError{path: cfg.Path}
+			return nil, TailFileInvalidPermissionError{path: config.Path}
 		}
-		return nil, TailFileError{path: cfg.Path, err: err}
+		return nil, TailFileError{path: config.Path, err: err}
 	}
 
-	file, err := os.Open(cfg.Path)
+	file, err := os.Open(config.Path)
 	if err != nil {
 		if os.IsPermission(err) {
-			return nil, TailFileInvalidPermissionError{path: cfg.Path}
+			return nil, TailFileInvalidPermissionError{path: config.Path}
 		}
-		return nil, TailFileError{path: cfg.Path, err: err}
+		return nil, TailFileError{path: config.Path, err: err}
 	}
 	file.Close()
 
@@ -38,12 +40,12 @@ func NewTail(cfg TailConfig) (*tail.Tail, error) {
 		MustExist: true,
 		Logger:    tail.DiscardingLogger,
 		Location: &tail.SeekInfo{
-			Offset: cfg.StartOffset,
+			Offset: config.StartOffset,
 			Whence: 0,
 		},
 	}
 
-	t, err := tail.TailFile(cfg.Path, tcfg)
+	t, err := tail.TailFile(config.Path, tcfg)
 	if err != nil {
 		return nil, err
 	}
