@@ -36,6 +36,7 @@ func NewTail(cfg TailConfig) (*tail.Tail, error) {
 		ReOpen:    true,
 		Poll:      true,
 		MustExist: true,
+		Logger:    tail.DiscardingLogger,
 		Location: &tail.SeekInfo{
 			Offset: cfg.StartOffset,
 			Whence: 0,
